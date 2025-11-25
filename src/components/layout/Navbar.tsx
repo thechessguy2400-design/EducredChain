@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, AlignCenterVertical as Certificate, Shield } from 'lucide-react';
-import { useWallet } from '../../contexts/WalletContext';
-import WalletConnect from '../wallet/WalletConnect';
+import { Menu, X, Shield } from 'lucide-react';
+import { WalletButton } from '../wallet/WalletButton';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { address } = useWallet();
   const location = useLocation();
 
   const toggleMenu = () => {
@@ -62,7 +60,7 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
-            <WalletConnect />
+            <WalletButton />
           </div>
 
           {/* Mobile menu button */}
@@ -98,7 +96,7 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="pt-2">
-              <WalletConnect isMobile />
+              <WalletButton isMobile />
             </div>
           </div>
         )}
