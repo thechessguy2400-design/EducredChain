@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useWallet } from '../../contexts/WalletContext';
 import { Wallet, Loader2, AlertCircle, Check, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'react-hot-toast';
