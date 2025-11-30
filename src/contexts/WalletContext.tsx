@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import { initContract, getContract } from '../services/contractService';
 
 declare global {
   interface Window {
@@ -15,6 +16,9 @@ interface WalletContextType {
   switchToMumbai: () => Promise<void>;
   isMetaMaskInstalled: boolean;
   error: string | null;
+  contract: any | null;
+  isContractInitialized: boolean;
+  contractError: string | null;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -26,6 +30,9 @@ const WalletContext = createContext<WalletContextType>({
   switchToMumbai: async () => {},
   isMetaMaskInstalled: false,
   error: null,
+  contract: null,
+  isContractInitialized: false,
+  contractError: null,
 });
 
 export const useWallet = () => useContext(WalletContext);
@@ -39,7 +46,30 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [chainId, setChainId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contract, setContract] = useState<any>(null);
+  const [isContractInitialized, setIsContractInitialized] = useState(false);
+  const [contractError, setContractError] = useState<string | null>(null);
   const isMetaMaskInstalled = typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask;
+
+  // Initialize contract when address or chain changes
+  useEffect(() => {
+    const initializeContract = async () => {
+      if (!address || !isMetaMaskInstalled) return;
+      
+      try {
+        const contractInstance = await initContract();
+        setContract(contractInstance);
+        setIsContractInitialized(true);
+        setContractError(null);
+      } catch (err: any) {
+        console.error('Error initializing contract:', err);
+        setContractError(err.message || 'Failed to initialize contract');
+        setIsContractInitialized(false);
+      }
+    };
+
+    initializeContract();
+  }, [address, isMetaMaskInstalled]);
 
   // Check if user is already connected
   useEffect(() => {
@@ -160,24 +190,42 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     }
   };
 
-  const disconnectWallet = () => {
+  const disconnectWallet = useCallback(() => {
     setAddress(null);
     setChainId(null);
-  };
+    setContract(null);
+    setIsContractInitialized(false);
+    setContractError(null);
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    address,
+    isConnecting,
+    chainId,
+    connectWallet,
+    disconnectWallet,
+    switchToMumbai,
+    isMetaMaskInstalled,
+    error,
+    contract,
+    isContractInitialized,
+    contractError,
+  }), [
+    address,
+    isConnecting,
+    chainId,
+    connectWallet,
+    disconnectWallet,
+    switchToMumbai,
+    isMetaMaskInstalled,
+    error,
+    contract,
+    isContractInitialized,
+    contractError,
+  ]);
 
   return (
-    <WalletContext.Provider 
-      value={{ 
-        address, 
-        isConnecting, 
-        chainId,
-        connectWallet, 
-        disconnectWallet,
-        switchToMumbai,
-        isMetaMaskInstalled,
-        error,
-      }}
-    >
+    <WalletContext.Provider value={contextValue}>
       {children}
     </WalletContext.Provider>
   );
