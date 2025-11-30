@@ -1,42 +1,63 @@
 import { NFTStorage, File } from 'nft.storage';
 
-const REAL_API_TOKEN = process.env.NFT_STORAGE_KEY!; 
-// Put your real key in .env → NFT_STORAGE_KEY=xxxx
+// Use Vite's environment variables (VITE_ prefix is required)
+const NFT_STORAGE_KEY = import.meta.env.VITE_NFT_STORAGE_KEY || '';
+
+if (!NFT_STORAGE_KEY) {
+  console.warn('NFT_STORAGE_KEY is not set. IPFS functionality will be limited.');
+}
+
+// Create an NFT.Storage client
+const client = NFT_STORAGE_KEY ? new NFTStorage({ token: NFT_STORAGE_KEY }) : null;
 
 /**
  * Upload a file to IPFS using NFT.Storage
- * @returns real IPFS CID
+ * @param file The file to upload
+ * @returns The IPFS hash of the uploaded file
  */
 export const uploadToIPFS = async (file: File): Promise<string> => {
+  if (!client) {
+    throw new Error('NFT.Storage client not initialized. Please set VITE_NFT_STORAGE_KEY in your .env file.');
+  }
+
   try {
-    const client = new NFTStorage({ token: REAL_API_TOKEN });
-
-    // Upload actual file
-    const cid = await client.storeBlob(file);
-
-    console.log("Uploaded → CID:", cid);
-    return cid;
-  } catch (err) {
-    console.error("IPFS Upload Failed:", err);
-    throw err;
+    const metadata = await client.store({
+      name: file.name,
+      description: 'Educational credential document',
+      image: file,
+    });
+    
+    // Return the IPFS hash (CID)
+    return metadata.url.replace('ipfs://', '');
+  } catch (error) {
+    console.error('Error uploading to IPFS:', error);
+    throw new Error('Failed to upload to IPFS. Please check your connection and try again.');
   }
 };
 
 /**
- * Retrieve a file from IPFS using its CID
- * @returns file Blob
+ * Retrieve a file from IPFS
+ * @param cid The IPFS content identifier (CID)
+ * @returns The file data
  */
-export const retrieveFromIPFS = async (cid: string): Promise<Blob> => {
+export const retrieveFromIPFS = async (cid: string): Promise<ArrayBuffer> => {
   try {
-    const url = `https://ipfs.io/ipfs/${cid}`;
-    const res = await fetch(url);
-
-    if (!res.ok) throw new Error(`Failed to retrieve: ${res.statusText}`);
-
-    const blob = await res.blob();
-    return blob;
-  } catch (err) {
-    console.error("IPFS Retrieval Failed:", err);
-    throw err;
+    // Use a public IPFS gateway
+    const gatewayUrl = `https://ipfs.io/ipfs/${cid}`;
+    const response = await fetch(gatewayUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from IPFS: ${response.statusText}`);
+    }
+    
+    return await response.arrayBuffer();
+  } catch (error) {
+    console.error('Error retrieving from IPFS:', error);
+    throw new Error('Failed to retrieve file from IPFS. The content may not be available.');
   }
+};
+
+// Helper function to create a File object from a buffer
+export const bufferToFile = (buffer: ArrayBuffer, filename: string, mimeType: string): File => {
+  return new File([buffer], filename, { type: mimeType });
 };
