@@ -1,5 +1,5 @@
-import React from "react";
 import { Link } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
 import {
   Shield,
   FileUp,
@@ -11,6 +11,24 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useWallet } from "../contexts/WalletContext";
+
+// Type definitions
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+  bg: string;
+  color: string;
+}
+
+interface SectionTitleProps {
+  title: string;
+  desc: string;
+}
+
+interface CardProps extends Feature {}
+
+interface BenefitItemProps extends Feature {}
 
 const features = [
   {
@@ -67,135 +85,129 @@ const benefits = [
   },
 ];
 
-const SectionTitle = ({ title, desc }) => (
+const SectionTitle = ({ title, desc }: SectionTitleProps) => (
   <div className="text-center mb-16">
-    <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
-    <p className="text-gray-600 max-w-2xl mx-auto">{desc}</p>
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{title}</h2>
+    <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">{desc}</p>
   </div>
 );
 
-const Card = ({ icon: Icon, title, desc, bg, color }) => (
-  <div className="card flex flex-col items-center text-center p-8">
-    <div className={`w-16 h-16 rounded-full ${bg} flex items-center justify-center mb-6`}>
+const Card = ({ icon: Icon, title, desc, bg, color }: CardProps) => (
+  <div className="flex flex-col items-center text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 h-full">
+    <div className={`w-16 h-16 rounded-full ${bg} dark:bg-opacity-20 flex items-center justify-center mb-6`}>
       <Icon className={`w-8 h-8 ${color}`} />
     </div>
-    <h3 className="text-xl font-bold mb-3">{title}</h3>
-    <p className="text-gray-600">{desc}</p>
+    <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{title}</h3>
+    <p className="text-gray-600 dark:text-gray-300">{desc}</p>
   </div>
 );
 
-const BenefitItem = ({ icon: Icon, title, desc, bg, color }) => (
-  <div className="flex space-x-4">
+const BenefitItem = ({ icon: Icon, title, desc, bg, color }: BenefitItemProps) => (
+  <div className="flex space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl hover:shadow-md transition-shadow duration-300 h-full">
     <div className="flex-shrink-0">
-      <div className={`w-12 h-12 rounded-full ${bg} flex items-center justify-center`}>
+      <div className={`w-12 h-12 rounded-full ${bg} dark:bg-opacity-20 flex items-center justify-center`}>
         <Icon className={`w-6 h-6 ${color}`} />
       </div>
     </div>
     <div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-gray-600">{desc}</p>
+      <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{title}</h3>
+      <p className="text-gray-600 dark:text-gray-300">{desc}</p>
     </div>
   </div>
 );
 
 const HomePage = () => {
   const { address } = useWallet();
-  const buttonText = address ? "Go to Dashboard" : "Get Started";
 
   return (
-    <div>
-      {/* HERO */}
-      <section className="bg-gradient-to-br from-primary-900 to-primary-700 text-white py-20">
-        <div className="container-custom grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Verify Your Credentials with Blockchain & AI
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-br from-primary-50 to-white dark:from-gray-800 dark:to-gray-900">
+        <div className="container-custom">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 text-sm font-medium mb-6">
+              <Sparkles className="w-4 h-4 mr-2" />
+              The Future of Credential Verification
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+              Secure, Verifiable Learning Credentials on the Blockchain
             </h1>
-
-            <p className="text-lg text-primary-100 max-w-lg">
-              EduCred securely stores and verifies your learning credentials
-              using blockchain and enhances them with AI-powered insights.
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
+              Transform your educational certificates and credentials into secure, tamper-proof digital assets with the power of blockchain and AI.
             </p>
-
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-4">
-              <Link to="/dashboard" className="btn-accent">
-                {buttonText}
-              </Link>
-
-              <a
-                href="#how-it-works"
-                className="btn btn-outline border-white text-white hover:bg-white/10"
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link
+                to={address ? "/upload" : "#"}
+                className={`px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-white ${
+                  address
+                    ? 'bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600'
+                    : 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
+                } transition-colors duration-200`}
               >
-                Learn More
-              </a>
+                {address ? 'Upload Credentials' : 'Connect Wallet to Get Started'}
+              </Link>
+              <Link
+                to="/dashboard"
+                className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-primary-600 dark:text-primary-400 bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                View Dashboard
+              </Link>
             </div>
-          </div>
-
-          <div className="relative">
-            <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl border-4 border-white/20">
-              <img
-                src="https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg"
-                alt="Credential Verification"
-                className="w-full h-auto"
-              />
-            </div>
-            <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-accent-400 rounded-full opacity-30 blur-2xl" />
-            <div className="absolute -top-6 -left-6 w-32 h-32 bg-secondary-400 rounded-full opacity-30 blur-2xl" />
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="py-20 bg-gray-50" id="how-it-works">
+      {/* Features Section */}
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="container-custom">
           <SectionTitle
             title="How It Works"
-            desc="Our platform combines blockchain and AI to create a secure and intelligent credential verification system."
+            desc="EduCred Chain makes it simple to secure and verify your educational credentials using cutting-edge technology."
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((f, i) => (
-              <Card key={i} {...f} />
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} {...feature} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* BENEFITS */}
-      <section className="py-20 bg-white">
+      {/* Benefits Section */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container-custom">
           <SectionTitle
-            title="Key Benefits"
-            desc="EduCred offers several advantages for learners, educators, and employers."
+            title="Why Choose EduCred Chain"
+            desc="Experience the next generation of credential verification with these powerful benefits."
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {benefits.map((b, i) => (
-              <BenefitItem key={i} {...b} />
+          <div className="grid md:grid-cols-2 gap-6">
+            {benefits.map((benefit, index) => (
+              <BenefitItem key={index} {...benefit} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-gradient-to-br from-secondary-900 to-secondary-700 text-white">
-        <div className="container-custom text-center max-w-3xl mx-auto">
-          <Sparkles className="w-16 h-16 mx-auto mb-6 text-secondary-300" />
-
-          <h2 className="text-3xl font-bold mb-6">
-            Ready to Verify Your Credentials?
-          </h2>
-
-          <p className="text-xl text-secondary-100 mb-8">
-            Join our platform today and experience the future of verification.
+      {/* CTA Section */}
+      <section className="py-20 bg-primary-600 dark:bg-primary-700 text-white">
+        <div className="container-custom text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Secure Your Credentials?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+            Join the future of verifiable credentials today. It's free to get started.
           </p>
-
-          <Link
-            to="/dashboard"
-            className="btn bg-white text-secondary-700 hover:bg-gray-100"
-          >
-            {buttonText}
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              to="/upload"
+              className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium bg-white text-primary-600 hover:bg-gray-100 dark:hover:bg-gray-100 transition-colors duration-200"
+            >
+              Get Started
+            </Link>
+            <Link
+              to="/dashboard"
+              className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium border-2 border-white text-white hover:bg-white hover:bg-opacity-10 transition-colors duration-200"
+            >
+              View Dashboard
+            </Link>
+          </div>
         </div>
       </section>
     </div>

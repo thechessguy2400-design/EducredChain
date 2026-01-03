@@ -287,7 +287,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     setCredentials([]);
     setIsContractInitialized(false);
     setContractError(null);
-  }, []);
+  }, [] );
 
   useEffect(() => {
     if (address && contract) {
