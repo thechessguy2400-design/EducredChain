@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 // Contract address (replace with your deployed contract address)
-const CONTRACT_ADDRESS = 'YOUR_DEPLOYED_CONTRACT_ADDRESS';
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '';
 
 // Initialize contract instance
 let contract: ethers.Contract | null = null;
@@ -51,43 +51,63 @@ export const mintCredential = async (
   ipfsHash: string
 ): Promise<ethers.ContractReceipt> => {
   const contract = getContract();
-  const tx = await contract.mintCredential(to, title, description, issuer, ipfsHash);
-  const receipt = await tx.wait();
-  return receipt as ethers.ContractReceipt;
+  try {
+    const tx = await contract.mintCredential(to, title, description, issuer, ipfsHash);
+    const receipt = await tx.wait();
+    return receipt;
+  } catch (error) {
+    console.error('Error minting credential:', error);
+    throw error;
+  }
 };
 
 // Get credential details
 export const getCredential = async (tokenId: number) => {
   const contract = getContract();
-  const [title, description, issuer, issueDate, ipfsHash, isRevoked] = await contract.getCredential(tokenId);
-  return {
-    title,
-    description,
-    issuer,
-    issueDate: new Date(issueDate.toNumber() * 1000),
-    ipfsHash,
-    isRevoked
-  };
+  try {
+    const [title, description, issuer, issueDate, ipfsHash, isRevoked] = await contract.getCredential(tokenId);
+    return {
+      title,
+      description,
+      issuer,
+      issueDate: new Date(issueDate.toNumber() * 1000),
+      ipfsHash,
+      isRevoked
+    };
+  } catch (error) {
+    console.error('Error getting credential:', error);
+    throw error;
+  }
 };
 
 // Revoke a credential
 export const revokeCredential = async (tokenId: number, reason: string): Promise<ethers.ContractReceipt> => {
   const contract = getContract();
-  const tx = await contract.revokeCredential(tokenId, reason);
-  const receipt = await tx.wait();
-  return receipt as ethers.ContractReceipt;
+  try {
+    const tx = await contract.revokeCredential(tokenId, reason);
+    const receipt = await tx.wait();
+    return receipt;
+  } catch (error) {
+    console.error('Error revoking credential:', error);
+    throw error;
+  }
 };
 
 // Get all tokens owned by an address
 export const getTokensByOwner = async (owner: string): Promise<number[]> => {
   const contract = getContract();
-  const balance = await contract.balanceOf(owner);
-  const tokens: number[] = [];
+  try {
+    const balance = await contract.balanceOf(owner);
+    const tokens: number[] = [];
   
-  for (let i = 0; i < balance.toNumber(); i++) {
-    const tokenId = await contract.tokenOfOwnerByIndex(owner, i);
-    tokens.push(tokenId.toNumber());
+    for (let i = 0; i < balance.toNumber(); i++) {
+      const tokenId = await contract.tokenOfOwnerByIndex(owner, i);
+      tokens.push(tokenId.toNumber());
+    }
+  
+    return tokens;
+  } catch (error) {
+    console.error('Error getting tokens by owner:', error);
+    throw error;
   }
-  
-  return tokens;
 };

@@ -216,7 +216,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
   const loadCredentials = useCallback(async () => {
     if (!address || !contract) return;
-    
+
     try {
       setIsRefreshing(true);
       const tokenIds = await contract.getTokensByOwner(address);
@@ -244,8 +244,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   }, [address, contract]);
 
   const uploadAndMintCredential = useCallback(async (
-    file: File, 
-    title: string, 
+    file: File,
+    title: string,
     description: string
   ) => {
     if (!address || !contract) {
@@ -256,16 +256,18 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      
-      const ipfsHash = await uploadToIPFS(file, (progress) => {
+
+      toast.loading('Uploading to IPFS...');
+      const ipfsHash = await uploadToIPFS(file, (progress: { loaded: number; total: number }) => {
         setUploadProgress(Math.round((progress.loaded / progress.total) * 100));
       });
-      
+
+      toast.loading('Minting credential...');
       const tx = await mintCredential(contract, address, title, description, 'EduCred Chain', ipfsHash);
       await tx.wait();
-      
+
       await loadCredentials();
-      
+
       toast.success('Credential minted successfully!');
       setUploadProgress(0);
     } catch (error) {

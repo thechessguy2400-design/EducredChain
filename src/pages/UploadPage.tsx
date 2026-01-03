@@ -7,6 +7,8 @@ import UploadSteps from '../components/upload/UploadSteps';
 import CredentialForm from '../components/upload/CredentialForm';
 import { uploadToIPFS } from '../services/ipfsService';
 import { mintNFT } from '../services/web3Service';
+import { parsePDF } from '../services/pdfService';
+import { generatePDFPreview } from '../services/pdfPreviewService';
 
 interface CredentialFormData {
   name: string;
@@ -56,24 +58,28 @@ const UploadPage = () => {
 
   const processCredential = async (data: CredentialFormData) => {
     if (!file) return;
-    
+
     try {
       setIsProcessing(true);
       setIsLoading(true);
-      
+
+      // Parse PDF to extract text content
+      const extractedText = await parsePDF(file);
+
       // Upload to IPFS
       const hash = await uploadToIPFS(file);
       setIpfsHash(hash);
-      
+
       // Mint NFT
       const id = await mintNFT({
         name: data.name,
         issuer: data.issuer,
         issueDate: data.issueDate,
         ipfsHash: hash,
+        extractedText,
       });
       setTokenId(id);
-      
+
       // Add to credentials context
       const newCredential = {
         id: Date.now().toString(),
@@ -82,10 +88,10 @@ const UploadPage = () => {
         issueDate: data.issueDate,
         ipfsHash: hash,
         tokenId: id,
-        summary: 'This is an automatically generated summary of the credential content. It highlights key learning outcomes and achievements.',
-        previewUrl: 'https://images.pexels.com/photos/5797908/pexels-photo-5797908.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+        summary: extractedText.substring(0, 200),
+        previewUrl: await generatePDFPreview(file),
       };
-      
+
       addCredential(newCredential);
       setCurrentStep(4);
     } catch (err) {
