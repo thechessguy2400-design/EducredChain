@@ -7,8 +7,7 @@ import UploadSteps from '../components/upload/UploadSteps';
 import CredentialForm from '../components/upload/CredentialForm';
 import { uploadToIPFS } from '../services/ipfsService';
 import { mintNFT } from '../services/web3Service';
-import { parsePDF } from '../services/pdfService';
-import { generatePDFPreview } from '../services/pdfPreviewService';
+import { parsePDF, generatePDFPreview } from '../services/pdfService';
 
 interface CredentialFormData {
   name: string;
@@ -30,6 +29,8 @@ const UploadPage = () => {
   const [tokenId, setTokenId] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [extractedText, setExtractedText] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -65,6 +66,11 @@ const UploadPage = () => {
 
       // Parse PDF to extract text content
       const extractedText = await parsePDF(file);
+      setExtractedText(extractedText);
+
+      // Generate preview image
+      const previewUrl = await generatePDFPreview(file);
+      setPreviewUrl(previewUrl);
 
       // Upload to IPFS
       const hash = await uploadToIPFS(file);
@@ -77,6 +83,7 @@ const UploadPage = () => {
         issueDate: data.issueDate,
         ipfsHash: hash,
         extractedText,
+        previewUrl,
       });
       setTokenId(id);
 
@@ -89,7 +96,7 @@ const UploadPage = () => {
         ipfsHash: hash,
         tokenId: id,
         summary: extractedText.substring(0, 200),
-        previewUrl: await generatePDFPreview(file),
+        previewUrl,
       };
 
       addCredential(newCredential);
@@ -195,6 +202,14 @@ const UploadPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-500">NFT Token ID</span>
                     <span className="text-sm text-primary-600 font-mono">{tokenId}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-500">Extracted Text</span>
+                    <span className="text-sm text-primary-600 font-mono">{extractedText.substring(0, 200)}...</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-500">Preview URL</span>
+                    <span className="text-sm text-primary-600 font-mono">{previewUrl}</span>
                   </div>
                 </div>
 
