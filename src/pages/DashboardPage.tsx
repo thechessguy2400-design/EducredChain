@@ -100,40 +100,26 @@ const DashboardPage = () => {
                 <Brain className="h-8 w-8 text-primary-600" />
               </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">AI-Powered Insights</h3>
-              <p className="text-gray-700 mb-4">
-                Click on any credential to interact with our AI. Ask questions, get summaries, and explore your learning materials in depth.
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">AI-Powered Insights</h2>
+              <p className="text-gray-600 max-w-xl">
+                Get personalized learning insights and recommendations based on your credentials.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <div className="bg-white rounded-full px-3 py-1 text-sm font-medium text-primary-600 shadow-sm flex items-center">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Get summary
-                </div>
-                <div className="bg-white rounded-full px-3 py-1 text-sm font-medium text-primary-600 shadow-sm flex items-center">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Ask questions
-                </div>
-                <div className="bg-white rounded-full px-3 py-1 text-sm font-medium text-primary-600 shadow-sm flex items-center">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Verify authenticity
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* AI Interaction Modal */}
-      {showAIModal && selectedCredential && (
-        <AIInteraction 
-          credential={selectedCredential} 
-          isOpen={showAIModal} 
-          onClose={() => setShowAIModal(false)} 
-        />
-      )}
     </div>
   );
+
+  {/* AI Interaction Modal */}
+  {showAIModal && selectedCredential && (
+    <AIInteraction 
+      credential={selectedCredential} 
+      isOpen={showAIModal} 
+      onClose={() => setShowAIModal(false)} 
+    />
+  )}
 };
 
 export default DashboardPage;

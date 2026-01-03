@@ -13,9 +13,10 @@ const client = NFT_STORAGE_KEY ? new NFTStorage({ token: NFT_STORAGE_KEY }) : nu
 /**
  * Upload a file to IPFS using NFT.Storage
  * @param file The file to upload
+ * @param onProgress Optional callback to report upload progress
  * @returns The IPFS hash of the uploaded file
  */
-export const uploadToIPFS = async (file: File): Promise<string> => {
+export const uploadToIPFS = async (file: File, onProgress?: (progress: { loaded: number; total: number }) => void): Promise<string> => {
   if (!client) {
     throw new Error('NFT.Storage client not initialized. Please set VITE_NFT_STORAGE_KEY in your .env file.');
   }
@@ -25,8 +26,12 @@ export const uploadToIPFS = async (file: File): Promise<string> => {
       name: file.name,
       description: 'Educational credential document',
       image: file,
-    });
-    
+    }, { onStoredChunk: (size) => {
+      if (onProgress) {
+        onProgress({ loaded: size, total: file.size });
+      }
+    }});
+
     // Return the IPFS hash (CID)
     return metadata.url.replace('ipfs://', '');
   } catch (error) {

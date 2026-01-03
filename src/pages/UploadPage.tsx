@@ -7,6 +7,7 @@ import UploadSteps from '../components/upload/UploadSteps';
 import CredentialForm from '../components/upload/CredentialForm';
 import { uploadToIPFS } from '../services/ipfsService';
 import { mintNFT } from '../services/web3Service';
+import { parsePDF, generatePDFPreview } from '../services/pdfService';
 
 interface CredentialFormData {
   name: string;
@@ -28,6 +29,8 @@ const UploadPage = () => {
   const [tokenId, setTokenId] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [extractedText, setExtractedText] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -56,24 +59,34 @@ const UploadPage = () => {
 
   const processCredential = async (data: CredentialFormData) => {
     if (!file) return;
-    
+
     try {
       setIsProcessing(true);
       setIsLoading(true);
-      
+
+      // Parse PDF to extract text content
+      const extractedText = await parsePDF(file);
+      setExtractedText(extractedText);
+
+      // Generate preview image
+      const previewUrl = await generatePDFPreview(file);
+      setPreviewUrl(previewUrl);
+
       // Upload to IPFS
       const hash = await uploadToIPFS(file);
       setIpfsHash(hash);
-      
+
       // Mint NFT
       const id = await mintNFT({
         name: data.name,
         issuer: data.issuer,
         issueDate: data.issueDate,
         ipfsHash: hash,
+        extractedText,
+        previewUrl,
       });
       setTokenId(id);
-      
+
       // Add to credentials context
       const newCredential = {
         id: Date.now().toString(),
@@ -82,10 +95,10 @@ const UploadPage = () => {
         issueDate: data.issueDate,
         ipfsHash: hash,
         tokenId: id,
-        summary: 'This is an automatically generated summary of the credential content. It highlights key learning outcomes and achievements.',
-        previewUrl: 'https://images.pexels.com/photos/5797908/pexels-photo-5797908.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+        summary: extractedText.substring(0, 200),
+        previewUrl,
       };
-      
+
       addCredential(newCredential);
       setCurrentStep(4);
     } catch (err) {
@@ -189,6 +202,14 @@ const UploadPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-500">NFT Token ID</span>
                     <span className="text-sm text-primary-600 font-mono">{tokenId}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-500">Extracted Text</span>
+                    <span className="text-sm text-primary-600 font-mono">{extractedText.substring(0, 200)}...</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-500">Preview URL</span>
+                    <span className="text-sm text-primary-600 font-mono">{previewUrl}</span>
                   </div>
                 </div>
 
