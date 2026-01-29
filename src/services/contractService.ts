@@ -49,6 +49,47 @@ const notifyWalletChange = () => {
   walletChangeListeners.forEach(listener => listener());
 };
 
+// Input validation helpers
+const validateAddress = (address: string, fieldName: string = 'Address'): void => {
+  if (!address || typeof address !== 'string') {
+    throw new ValidationError(`${fieldName} is required and must be a string`);
+  }
+  if (!ethers.utils.isAddress(address)) {
+    throw new ValidationError(`Invalid ${fieldName}: ${address}`);
+  }
+};
+
+const validateNonEmptyString = (value: string, fieldName: string): void => {
+  if (!value || typeof value !== 'string') {
+    throw new ValidationError(`${fieldName} is required and must be a string`);
+  }
+  if (value.trim().length === 0) {
+    throw new ValidationError(`${fieldName} cannot be empty`);
+  }
+  if (value.length > 500) {
+    throw new ValidationError(`${fieldName} cannot exceed 500 characters`);
+  }
+};
+
+const validateTokenId = (tokenId: number): void => {
+  if (!Number.isInteger(tokenId) || tokenId < 0) {
+    throw new ValidationError('Token ID must be a non-negative integer');
+  }
+  if (tokenId > Number.MAX_SAFE_INTEGER) {
+    throw new ValidationError('Token ID is too large');
+  }
+};
+
+const validateIpfsHash = (ipfsHash: string): void => {
+  if (!ipfsHash || typeof ipfsHash !== 'string') {
+    throw new ValidationError('IPFS hash is required and must be a string');
+  }
+  // Basic IPFS hash validation (Qm... or bafy...)
+  if (!ipfsHash.match(/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|b[A-Za-z2-7]{58})$/)) {
+    throw new ValidationError('Invalid IPFS hash format');
+  }
+};
+
 // Custom error class for contract-related errors
 export class ContractError extends AppError {
   constructor(message: string, public readonly method?: string, details?: unknown) {
@@ -207,12 +248,15 @@ export const mintCredential = async (
   issuer: string,
   ipfsHash: string
 ): Promise<ethers.ContractReceipt> => {
+  // Validate all inputs
+  validateAddress(to, 'Recipient address');
+  validateNonEmptyString(title, 'Title');
+  validateNonEmptyString(description, 'Description');
+  validateNonEmptyString(issuer, 'Issuer');
+  validateIpfsHash(ipfsHash);
+  
   const contract = getContract();
   try {
-    if (!ethers.utils.isAddress(to)) {
-      throw new ValidationError('Invalid recipient address');
-    }
-    
     const tx = await contract.mintCredential(to, title, description, issuer, ipfsHash);
     const receipt = await tx.wait();
     return receipt;
@@ -227,6 +271,9 @@ export const mintCredential = async (
 
 // Get credential details
 export const getCredential = async (tokenId: number) => {
+  // Validate input
+  validateTokenId(tokenId);
+  
   const contract = getContract();
   try {
     const [title, description, issuer, issueDate, ipfsHash, isRevoked] = await contract.getCredential(tokenId);
@@ -254,6 +301,10 @@ export const getCredential = async (tokenId: number) => {
 
 // Revoke a credential
 export const revokeCredential = async (tokenId: number, reason: string): Promise<ethers.ContractReceipt> => {
+  // Validate inputs
+  validateTokenId(tokenId);
+  validateNonEmptyString(reason, 'Revocation reason');
+  
   const contract = getContract();
   try {
     const tx = await contract.revokeCredential(tokenId, reason);
@@ -270,12 +321,11 @@ export const revokeCredential = async (tokenId: number, reason: string): Promise
 
 // Get all tokens owned by an address
 export const getTokensByOwner = async (owner: string): Promise<number[]> => {
+  // Validate input
+  validateAddress(owner, 'Owner address');
+  
   const contract = getContract();
   try {
-    if (!ethers.utils.isAddress(owner)) {
-      throw new ValidationError('Invalid owner address');
-    }
-    
     const balance = await contract.balanceOf(owner);
     const tokens: number[] = [];
     
@@ -292,7 +342,7 @@ export const getTokensByOwner = async (owner: string): Promise<number[]> => {
       }
       
       const batchResults = await Promise.all(batchPromises);
-      tokens.push(...batchResults.map(id => id.toNumber()));
+      tokens.push(...batchResults.map((id: ethers.BigNumber) => id.toNumber()));
     }
     
     return tokens;
