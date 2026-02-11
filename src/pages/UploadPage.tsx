@@ -116,6 +116,8 @@ const UploadPage = () => {
   };
 
   return (
+    <div>
+      
     <div className="py-8 bg-gray-50 min-h-screen">
       <div className="container-custom">
         <div className="max-w-3xl mx-auto">
@@ -144,7 +146,7 @@ const UploadPage = () => {
                   className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
                     isDragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
                   }`}
-                >
+                  >
                   <input {...getInputProps()} />
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-gray-900 mb-1">
@@ -217,7 +219,7 @@ const UploadPage = () => {
                   <button
                     onClick={goToDashboard}
                     className="btn-primary flex items-center"
-                  >
+                    >
                     <Shield className="w-4 h-4 mr-2" />
                     View in Dashboard
                   </button>
@@ -227,6 +229,7 @@ const UploadPage = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
